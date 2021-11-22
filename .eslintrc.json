@@ -15,5 +15,6 @@
     "global-require": 0,
     "no-console": 1,
     "no-restricted-syntax": 0
-  }
+  },
+  "ignorePatterns": ["src/database/migrations/*.js", "src/database/models/*.js"]
 }
