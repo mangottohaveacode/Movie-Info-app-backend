@@ -33,5 +33,6 @@ jobs:
 
       - name: Auto fix issues
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           auto_fix: true
           commit_message: "style: fix code style issues with ${linter}"
