@@ -1,13 +1,15 @@
-const { generateHashAndSalt } = require("../utility/hash");
+const { generateSalt, generateHash } = require("../utility/hash");
 const { userRepository } = require("../repositories/user.repository");
 
 const register = async (user) => {
-  const hashAndSalt = await generateHashAndSalt(user.password);
+  const salt = await generateSalt();
+  const hash = await generateHash(user.password, salt);
+
   const newUser = await userRepository.create({
     username: user.username,
     email: user.email,
-    passwordHash: hashAndSalt.hash,
-    passwordSalt: hashAndSalt.salt
+    passwordHash: hash,
+    passwordSalt: salt
   });
 
   return {

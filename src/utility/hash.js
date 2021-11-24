@@ -1,13 +1,13 @@
 const bcrypt = require("bcrypt");
 
-const generateHashAndSalt = async (password) => {
+const generateSalt = async () => {
   const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash(password, salt);
-
-  return {
-    salt,
-    hash
-  };
+  return salt;
 };
 
-module.exports = { generateHashAndSalt };
+const generateHash = async (password, salt) => {
+  const hash = await bcrypt.hash(password, salt);
+  return hash;
+};
+
+module.exports = { generateHash, generateSalt };
