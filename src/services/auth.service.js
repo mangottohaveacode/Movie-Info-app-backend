@@ -1,4 +1,6 @@
+const bcrypt = require("bcrypt");
 const { generateSalt, generateHash } = require("../utility/hash");
+const { generateJwt } = require("../utility/jwt");
 const { userRepository } = require("../repositories/user.repository");
 
 const register = async (user) => {
@@ -19,4 +21,29 @@ const register = async (user) => {
   };
 };
 
-module.exports = { authService: { register } };
+const login = async (request) => {
+  const user = await userRepository.getByEmail(request.email);
+
+  if (user !== undefined && user !== null) {
+    const correctPassword = await bcrypt.compare(
+      request.password,
+      user.passwordHash
+    );
+
+    if (correctPassword) {
+      const jwt = generateJwt({
+        id: user.id,
+        username: user.username,
+        email: user.email
+      });
+
+      return {
+        token: jwt
+      };
+    }
+  }
+
+  return null;
+};
+
+module.exports = { authService: { register, login } };
