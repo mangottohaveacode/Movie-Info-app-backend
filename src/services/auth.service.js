@@ -1,7 +1,10 @@
 const bcrypt = require("bcrypt");
 const { generateSalt, generateHash } = require("../utility/hash");
-const { generateJwt } = require("../utility/jwt");
+const { generateJwt, generateRefreshToken } = require("../utility/jwt");
 const { userRepository } = require("../repositories/user.repository");
+const {
+  refreshTokenRepository
+} = require("../repositories/refreshToken.repository");
 
 const register = async (user) => {
   const salt = await generateSalt();
@@ -37,8 +40,13 @@ const login = async (request) => {
         email: user.email
       });
 
+      const refreshToken = generateRefreshToken(user);
+
+      await refreshTokenRepository.create(refreshToken);
+
       return {
-        token: jwt
+        token: jwt,
+        refreshToken
       };
     }
   }
