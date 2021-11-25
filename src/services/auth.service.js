@@ -65,7 +65,10 @@ const login = async (request) => {
 };
 
 const refreshToken = async (request) => {
-  const isVerified = verifyToken(request.token, (err) => err !== null && err !== undefined);
+  const isVerified = verifyToken(
+    request.token,
+    (err) => err !== null && err !== undefined
+  );
 
   if (!isVerified) {
     return null;
