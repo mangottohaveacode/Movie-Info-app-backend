@@ -28,4 +28,14 @@ router.post("/login", validate(loginValidation), async (req, res) => {
   return res.status(200).json(response);
 });
 
+router.post("/refresh", async (req, res) => {
+  const response = await authService.refreshToken(req.body);
+
+  if (response === null || response.error !== undefined) {
+    return res.status(403).json(response);
+  }
+
+  return res.status(200).json(response);
+});
+
 module.exports = router;
