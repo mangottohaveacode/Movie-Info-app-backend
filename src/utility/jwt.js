@@ -11,7 +11,7 @@ const generateRefreshToken = (user) => {
   const expiredAt = new Date();
 
   expiredAt.setSeconds(
-    expiredAt.getSeconds() + config.config.jwt.refreshExpiresIn
+    expiredAt.getSeconds() + config.jwt.refreshExpiresIn * 1000
   );
 
   const token = uuidv4();
@@ -25,5 +25,25 @@ const generateRefreshToken = (user) => {
   return refreshToken;
 };
 
+const verifyToken = (token, callback) => {
+  jwt.verify(token, config.jwt.secret, callback);
+};
 
-module.exports = { generateJwt, generateRefreshToken };
+const extractUserId = (token) => {
+  const decodedToken = jwt.verify(token, config.jwt.secret, (err, decoded) => {
+    if (err) {
+      return { error: err };
+    }
+
+    return decoded;
+  });
+
+  return decodedToken.id;
+};
+
+module.exports = {
+  generateJwt,
+  generateRefreshToken,
+  extractUserId,
+  verifyToken
+};
