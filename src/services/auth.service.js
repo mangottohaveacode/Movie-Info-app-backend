@@ -1,6 +1,11 @@
 const bcrypt = require("bcrypt");
 const { generateSalt, generateHash } = require("../utility/hash");
-const { generateJwt, generateRefreshToken } = require("../utility/jwt");
+const {
+  generateJwt,
+  generateRefreshToken,
+  extractUserId,
+  verifyToken
+} = require("../utility/jwt");
 const { userRepository } = require("../repositories/user.repository");
 const {
   refreshTokenRepository
@@ -24,6 +29,23 @@ const register = async (user) => {
   };
 };
 
+const generateTokens = async (user) => {
+  const refreshToken = generateRefreshToken(user);
+
+  await refreshTokenRepository.create(refreshToken);
+
+  const jwt = generateJwt({
+    id: user.id,
+    username: user.username,
+    email: user.email
+  });
+
+  return {
+    token: jwt,
+    refreshToken: refreshToken.token
+  };
+};
+
 const login = async (request) => {
   const user = await userRepository.getByEmail(request.email);
 
@@ -34,24 +56,41 @@ const login = async (request) => {
     );
 
     if (correctPassword) {
-      const jwt = generateJwt({
-        id: user.id,
-        username: user.username,
-        email: user.email
-      });
-
-      const refreshToken = generateRefreshToken(user);
-
-      await refreshTokenRepository.create(refreshToken);
-
-      return {
-        token: jwt,
-        refreshToken
-      };
+      const authResponse = await generateTokens(user);
+      return authResponse;
     }
   }
 
   return null;
 };
 
-module.exports = { authService: { register, login } };
+const refreshToken = async (request) => {
+  const isVerified = verifyToken(request.token, (err) => err !== null && err !== undefined);
+
+  if (!isVerified) {
+    return null;
+  }
+
+  const token = await refreshTokenRepository.getToken(request.refreshToken);
+
+  if (token !== undefined && token !== null) {
+    if (token.expiryDate < new Date()) {
+      return { error: "The refresh token has expired" };
+    }
+
+    const userId = extractUserId(request.token);
+
+    if (token.userId !== userId) {
+      return { error: "You cannot use thie refresh token" };
+    }
+
+    const user = await userRepository.getById(userId);
+
+    const authResponse = await generateTokens(user);
+    return authResponse;
+  }
+
+  return null;
+};
+
+module.exports = { authService: { register, login, refreshToken } };
